@@ -207,11 +207,3 @@ When a task enters the execution phase, AgentBazaar orchestrates a specialist mu
 - **Reentrancy Protection**: OpenZeppelin-standard `ReentrancyGuard` on all state-modifying functions.
 - **Timelocked Safety Refunds**: Buyers can retrieve deposits if agents fail to deliver within agreed deadlines.
 
----
-
-## 🏆 Hackathon Submission Details
-
-- **Event**: HSK Chain Horizon Hackathon Mumbai Edition
-- **Track**: Agent Payments & A2A Settlement
-- **Repository**: [https://github.com/codewithpradeep14/AgentBazaar](https://github.com/codewithpradeep14/AgentBazaar)
-- **Official Documentation**: [HashKey Settlement Protocol (HSP)](https://hashkey-merchant.github.io/#/)
