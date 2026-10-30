@@ -1,0 +1,162 @@
+// Prisma Schema for AgentBazaar
+// The Marketplace Where AI Agents Do Business
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique
+  role          String    @default("BUYER") // BUYER, PROVIDER, DUAL
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tasks         Task[]    @relation("UserTasks")
+}
+
+model Agent {
+  id                String            @id @default(cuid())
+  name              String
+  slug              String            @unique
+  category          String            // SECURITY, DEVELOPMENT, RESEARCH, DATA_ANALYSIS, DESIGN
+  shortDescription  String
+  fullDescription   String
+  capabilities      String            // JSON serialized string array
+  inputFormats      String            // JSON serialized string array e.g. ["Solidity", "GitHub URL"]
+  outputFormats     String            // JSON serialized string array e.g. ["Audit Report PDF", "JSON Vulnerability Matrix"]
+  pricingModel      String            @default("FIXED") // FIXED, HOURLY, PER_UNIT
+  priceAmount       Float             // in HSK
+  currency          String            @default("HSK")
+  expectedTurnaround String           // e.g. "12-24 hours"
+  isAvailable       Boolean           @default(true)
+  isVerified        Boolean           @default(false)
+  verificationSource String?          // e.g. "HashKey Chain Staked Identity" or "Self-Reported"
+  rating            Float             @default(5.0)
+  reviewCount       Int               @default(0)
+  completedJobs     Int               @default(0)
+  walletAddress     String
+  endpointType      String            @default("NATIVE_GEMINI") // NATIVE_GEMINI, SIMULATED, EXTERNAL_RPC
+  endpointUrl       String?
+  sampleDeliverables String?          // JSON serialized samples
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  assignedTasks     Task[]            @relation("AgentTasks")
+  reviews           Review[]
+}
+
+model Task {
+  id                   String           @id @default(cuid())
+  userId               String?
+  user                 User?            @relation("UserTasks", fields: [userId], references: [id])
+  buyerAddress         String
+  title                String
+  naturalLanguagePrompt String
+  category             String
+  budgetAmount         Float
+  currency             String           @default("HSK")
+  deadline             String?
+  requiredDeliverables String           // JSON array or text
+  acceptanceCriteria   String           // JSON array or text
+  supportingLinks      String?          // JSON array or text
+  status               String           @default("DRAFT")
+  // State machine:
+  // DRAFT -> OPEN -> OFFER_SELECTED -> AWAITING_PAYMENT_AUTHORIZATION ->
+  // PAYMENT_PENDING -> PAID -> IN_PROGRESS -> DELIVERABLE_SUBMITTED ->
+  // AWAITING_REVIEW -> COMPLETED (or FAILED, CANCELLED)
+  
+  selectedAgentId      String?
+  selectedAgent        Agent?           @relation("AgentTasks", fields: [selectedAgentId], references: [id])
+  agreedPrice          Float?
+  deliverableContent   String?          // Markdown / JSON
+  deliverableSummary   String?
+  deliverableVerified  Boolean          @default(false)
+  verificationLog      String?
+  
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  
+  paymentMandate       PaymentMandate?
+  activityLogs         TaskActivityLog[]
+  review               Review?
+}
+
+model PaymentMandate {
+  id                    String           @id @default(cuid())
+  taskId                String           @unique
+  task                  Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  cartMandateId         String           @unique // HSP ID1
+  paymentRequestId      String           @unique // HSP ID2
+  merchantName          String           @default("AgentBazaar Protocol")
+  supportedMethods      String           @default("https://www.x402.org/")
+  network               String           @default("hsk-mainnet")
+  chainId               Int              @default(177)
+  payToAddress          String
+  coin                  String           @default("HSK")
+  amount                Float
+  currency              String           @default("USD")
+  tokenAmount           Float
+  tokenSymbol           String           @default("HSK")
+  additionalFee         Float            @default(0.0)
+  totalDue              Float
+  cartExpiry            DateTime
+  cartHash              String           // SHA256 canonical JSON hash
+  merchantAuthorization String?          // ES256K JWT
+  
+  // HSP Gateway & On-chain status:
+  // payment-required, payment-submitted, payment-verified, payment-processing,
+  // payment-included, payment-safe, payment-finalized, payment-failed
+  status                String           @default("payment-required")
+  statusReason          String?
+  payerAddress          String?
+  userSignature         String?          // EIP-712 / wallet authorization signature
+  onChainTxHash         String?
+  blockNumber           Int?
+  blockExplorerUrl      String?
+  completedAt           DateTime?
+  
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  attempts              PaymentAttempt[]
+}
+
+model PaymentAttempt {
+  id               String         @id @default(cuid())
+  mandateId        String
+  mandate          PaymentMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+  attemptNumber    Int            @default(1)
+  gatewayRequest   String?        // serialized JSON
+  gatewayResponse  String?        // serialized JSON
+  status           String         // SUCCESS, REJECTED, EXPIRED, FAILED
+  errorCode        String?
+  errorMessage     String?
+  createdAt        DateTime       @default(now())
+}
+
+model TaskActivityLog {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actorType  String   // SYSTEM, BUYER, AGENT, HSP_GATEWAY
+  actorName  String
+  action     String
+  message    String
+  metadata   String?  // JSON serialized extra context
+  timestamp  DateTime @default(now())
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id])
+  taskId          String   @unique
+  task            Task     @relation(fields: [taskId], references: [id])
+  reviewerAddress String
+  rating          Int      // 1 to 5
+  feedback        String
+  createdAt       DateTime @default(now())
+}
