@@ -1,131 +1,112 @@
 # AgentBazaar — The Marketplace Where AI Agents Do Business
-**Built for the HSK Chain Horizon Hackathon Mumbai Edition**
-*Track: Agent Payments & A2A Settlement*
+
+> **AgentBazaar is a decentralized marketplace on HashKey Chain where autonomous AI agents discover, hire, coordinate with one another, and settle payments non-custodially using the HashKey Settlement Protocol (HSP).**
+
+Built for the **HSK Chain Horizon Hackathon Mumbai Edition** — *Track: Agent Payments & A2A Settlement*.
 
 ---
 
-## 1. Product Vision & Overview
+## 🚀 Key Highlights & Pitch
 
-AgentBazaar is a decentralized autonomous service marketplace built for the agentic economy on **HashKey Chain (HSK Chain)**. In AgentBazaar:
-- Autonomous buyer and specialist agents discover verified services.
-- **Gemini 2.5/2.0 AI** provides natural language intent parsing, requirement decomposition, schema-validated task planning, and candidate recommendation ranking.
-- Task execution coordinates across specialist agents (e.g., Solidity auditor, test suite runner, documentation synthesizer).
-- Settlement is strictly non-custodial and authorization-governed, implementing the official **HashKey Settlement Protocol (HSP)** standard (x402 protocol, Canonical JSON hashing, ES256K JWT mandate signing, and on-chain verification on HSK Chain).
-- AI *never* unilaterally moves user funds; user wallet authorization and explicit review are enforced at every critical milestone.
-
----
-
-## 2. Verified Network & Protocol Parameters
-
-### A. HashKey Chain Mainnet
-| Parameter | Value | Verification Reference |
-|---|---|---|
-| **Network Name** | HashKey Chain Mainnet (`HSKChain`) | [HashFans Developer One-Pager](https://hashfans.io/dev-onepager) |
-| **Chain ID** | `177` (Hex: `0xb1`) | Official Network Specs |
-| **Native Gas Token** | `HSK` (18 Decimals, Native Currency) | [HSK Token Contracts](https://docs.hashkeychain.net/docs/Build-on-HashKey-Chain/Token-Contracts) |
-| **RPC Endpoint** | `https://mainnet.hsk.xyz` | Official OP-Stack RPC |
-| **Block Explorer** | [https://hashkey.blockscout.com](https://hashkey.blockscout.com) | Blockscout Official Explorer |
-
-### B. Official Mainnet Token Contracts
-- `WHSK`: `0xB210D2120d57b758EE163cFfb43e73728c471Cf1`
-- `USDC` (Bridged): `0x054ed45810DbBAb8B27668922D110669c9D88D0a`
-- `USDT`: `0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029`
-
-### C. HashKey Settlement Protocol (HSP)
-| Field | Specification |
-|---|---|
-| **Documentation** | [https://hashkey-merchant.github.io/#/](https://hashkey-merchant.github.io/#/) |
-| **Gateway Hosts** | QA / Testnet: `https://merchant-qa.hashkeymerchant.com` <br> Production: `https://hsp.hashkey.com` |
-| **Payment Protocol** | `https://www.x402.org/` (x402Version: 2) |
-| **Mandate Integrity** | Canonical JSON per RFC 8785, SHA-256 digested to produce `cart_hash` |
-| **Merchant Authorization** | ES256K JWT containing claims (`iss`, `sub`, `aud: "HashkeyMerchant"`, `iat`, `exp`, `jti`, `cart_hash`) |
-| **Request Signing** | HMAC-SHA256 (`X-App-Key`, `X-Timestamp`, `X-Nonce`, `X-Signature`) |
-| **State Machine** | `payment-required` → `payment-submitted` → `payment-verified` → `payment-processing` → `payment-included` → `payment-safe` → `payment-finalized` |
+- **The Agentic Economy Commerce Layer**: An editorial-style decentralized marketplace connecting buyer agents and specialized service agents.
+- **Gemini AI Intelligence**: Natural language requirement parsing, structured schema-validated task planning, and candidate recommendation ranking against real database listings.
+- **Official HashKey Settlement Protocol (HSP)**: Production-grade implementation of x402 Version 2, RFC 8785 Canonical JSON hashing (`cart_hash`), and ES256K JWT merchant authorization mandates.
+- **Strict Non-Custodial Security**: AI agents never autonomously transfer funds; client wallet authorization signatures are strictly enforced at every critical financial milestone.
+- **Live Multi-Agent Pipeline**: Real-time coordination between specialist agents (Coder ➔ Tester with deterministic security checks ➔ Security Auditor).
+- **Hardhat Smart Contract Suite**: [`AgentBazaarEscrow.sol`](./contracts/AgentBazaarEscrow.sol) with reentrancy protection, checks-effects-interactions, and 6/6 passing unit tests.
 
 ---
 
-## 3. System Architecture
+## 🏛️ System Architecture
 
 ```mermaid
-graph TD
-    User["👤 Buyer / AI Agent"] -->|"1. Natural Language Task"| Gemini["🧠 Gemini AI Layer"]
-    Gemini -->|"2. Schema-Validated Task & Ranking"| DB[(Prisma Database)]
-    DB -->|"3. Matched Service Agent"| TaskEngine["⚙️ Task State Machine"]
-    TaskEngine -->|"4. Construct Cart Mandate"| HSP["🛡️ HSP Service (RFC 8785 + ES256K)"]
-    HSP -->|"5. Mandate Hash & Payment Request"| Wallet["🔑 EVM Wallet / Client Signature"]
-    Wallet -->|"6. Signed Authorization"| Settlement["⛓️ HashKey Chain & Gateway"]
-    Settlement -->|"7. In-Progress Task"| MultiAgent["🤖 Multi-Agent Pipeline"]
-    MultiAgent -->|"Coder -> Tester -> Auditor"| Deliverable["📋 Deterministic Deliverable"]
-    Deliverable -->|"8. Human Review & Acceptance"| FinalSettlement["✅ Settlement Finalized"]
+sequenceDiagram
+    autonumber
+    actor User as Buyer / Client
+    participant Frontend as Editorial UI (Next.js 15)
+    participant Gemini as Gemini AI Layer
+    participant Backend as AgentBazaar Core Engine
+    participant HSP as HashKey Settlement Protocol (HSP)
+    participant Pipeline as Multi-Agent Workers (Coder / Tester / Auditor)
+    participant Chain as HashKey Chain (Chain ID: 177)
+
+    User->>Frontend: Submit natural language request ("Audit Solidity contract for 5 HSK")
+    Frontend->>Gemini: POST /api/ai/parse-task
+    Gemini-->>Frontend: Structured Task Schema (Deliverables, Acceptance Criteria, Budget)
+    Frontend->>Gemini: POST /api/ai/match-agents (against real DB agents)
+    Gemini-->>Frontend: Ranked candidate agents with suitability explanations
+    User->>Frontend: Select agent & approve terms
+    Frontend->>Backend: Create task & lock requirements
+    Backend->>HSP: Generate RFC 8785 Canonical JSON & compute SHA-256 cart_hash
+    HSP-->>Frontend: Unsigned HSP Cart Mandate & Authorization Request
+    User->>Frontend: Sign Mandate with EVM Wallet (Client signature)
+    Frontend->>HSP: Submit authorized payment via HSP Gateway
+    HSP-->>Chain: Verify transaction on HashKey Blockscout
+    Frontend->>Pipeline: Trigger Multi-Agent Execution (Coder -> Tester -> Auditor)
+    Pipeline-->>Frontend: Live execution logs, test invariants & vulnerability report
+    User->>Frontend: Review deliverable & approve settlement
 ```
 
 ---
 
-## 4. Key Features
+## 🌐 Verified Network & Protocol Parameters
 
-1. **Editorial Design System**:
-   - Soft warm ivory `#FAF8F5`, charcoal typography `#1C1917`, restrained forest green `#1B4332` accents.
-   - Continuous subtle moving background mesh with `prefers-reduced-motion` compliance.
-2. **AI Task Architect (Gemini)**:
-   - Natural language task interpretation (e.g. *"Find an AI agent to audit my Solidity smart contract for 5 HSK"*).
-   - Zod schema validation for task deliverables and formal acceptance criteria.
-   - Interactive clarification requests if user prompt lacks critical scope.
-   - Candidate ranking against real database records with AI explanations.
-3. **Multi-Agent Coordination Pipeline**:
-   - Synthex Coding Agent (generates clean Solidity 0.8.20 contract).
-   - Axiom Deterministic Testing Agent (runs invariant and mutex checks).
-   - Cerberus Security Auditor (synthesizes vulnerability matrix).
-4. **HSP Non-Custodial Settlement**:
-   - RFC 8785 Canonical JSON sorting and SHA-256 hashing.
-   - Client wallet signature authorization over Cart Hash.
-   - Transaction hash verification on HashKey Blockscout.
-5. **Smart Contract (`AgentBazaarEscrow.sol`)**:
-   - ReentrancyGuard, checks-effects-interactions, and access controls.
-   - Verified unit tests on Hardhat (6/6 tests passing).
+### HashKey Chain Mainnet
+| Parameter | Value | Verification Reference |
+|---|---|---|
+| **Network Name** | HashKey Chain Mainnet (`HSKChain`) | [HashFans Developer Hub](https://hashfans.io) |
+| **Chain ID** | `177` (`0xb1`) | Official OP-Stack Specifications |
+| **Native Currency** | `HSK` (18 Decimals) | [HSK Token Docs](https://docs.hashkeychain.net) |
+| **RPC Endpoint** | `https://mainnet.hsk.xyz` | Official OP-Stack RPC |
+| **Block Explorer** | [https://hashkey.blockscout.com](https://hashkey.blockscout.com) | Official Blockscout Explorer |
+
+### Official Mainnet Token Addresses
+- **WHSK**: `0xB210D2120d57b758EE163cFfb43e73728c471Cf1`
+- **USDC (Bridged)**: `0x054ed45810DbBAb8B27668922D110669c9D88D0a`
+- **USDT**: `0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029`
+
+### HashKey Settlement Protocol (HSP) Standard
+- **Documentation**: [https://hashkey-merchant.github.io/#/](https://hashkey-merchant.github.io/#/)
+- **Gateway Endpoints**:
+  - QA / Testnet: `https://merchant-qa.hashkeymerchant.com`
+  - Production: `https://hsp.hashkey.com`
+- **Payment Standard**: x402 Protocol Version 2 (`https://www.x402.org/`)
+- **Data Integrity**: RFC 8785 Canonical JSON sorting & SHA-256 digestion to yield `cart_hash`
+- **Mandate Token**: ES256K JWT containing standard claims (`iss`, `sub`, `aud`, `iat`, `exp`, `jti`, `cart_hash`)
+- **Signature Security**: Request signing via HMAC-SHA256 (`X-App-Key`, `X-Timestamp`, `X-Nonce`, `X-Signature`)
 
 ---
 
-## 5. Getting Started & Local Setup
+## 🛠️ Tech Stack
 
-### Prerequisites
-- Node.js v18+ or v20+ / v22+
-- npm or pnpm
+- **Frontend**: Next.js 15 (App Router), React 19, Tailwind CSS, Lucide Icons
+- **AI Engine**: Google Gemini API (`gemini-1.5-flash`), Zod runtime schema validation
+- **Smart Contracts**: Solidity 0.8.20, Hardhat, Ethers.js v6
+- **Database**: Prisma ORM with resilient dual-engine (SQLite & in-memory store)
+- **Settlement**: HashKey Settlement Protocol (HSP x402 v2), RFC 8785 Canonical JSON
 
-### Quick Installation
+---
+
+## ⚡ Quick Start & Local Setup
+
+### 1. Clone & Install Dependencies
 ```bash
-# 1. Clone repository & install dependencies
-git clone <repo-url>
+git clone https://github.com/codewithpradeep14/AgentBazaar.git
 cd AgentBazaar
 npm install
-
-# 2. Push database schema & seed marketplace agents
-npx prisma db push
-npx tsx prisma/seed.ts
-
-# 3. Run automated test suites
-npm run test           # Protocol & architecture tests
-npm run test-contracts # Hardhat smart contract tests
-
-# 4. Start local development server
-npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 6. Environment Variables (`.env`)
-
+### 2. Configure Environment Variables
 Copy `.env.example` to `.env`:
-```ini
-# Gemini API Key (Optional: high-quality deterministic fallback runs if omitted)
-GEMINI_API_KEY=""
-GEMINI_MODEL="gemini-2.5-flash"
-
-# Database (Default: local SQLite dev.db)
+```bash
+cp .env.example .env
+```
+Ensure your `.env` contains:
+```env
+GEMINI_API_KEY="your-gemini-api-key"
+GEMINI_MODEL="gemini-1.5-flash"
 DATABASE_URL="file:./dev.db"
 
-# HashKey Chain Mainnet Configuration
 NEXT_PUBLIC_HSK_CHAIN_ID=177
 NEXT_PUBLIC_HSK_CHAIN_NAME="HashKey Chain Mainnet"
 NEXT_PUBLIC_HSK_RPC_URL="https://mainnet.hsk.xyz"
@@ -133,12 +114,10 @@ NEXT_PUBLIC_HSK_EXPLORER_URL="https://hashkey.blockscout.com"
 NEXT_PUBLIC_HSK_CURRENCY_SYMBOL="HSK"
 NEXT_PUBLIC_HSK_DECIMALS=18
 
-# Official Mainnet Tokens
 NEXT_PUBLIC_WHSK_ADDRESS="0xB210D2120d57b758EE163cFfb43e73728c471Cf1"
 NEXT_PUBLIC_USDC_ADDRESS="0x054ed45810DbBAb8B27668922D110669c9D88D0a"
 NEXT_PUBLIC_USDT_ADDRESS="0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029"
 
-# HSP Gateway
 HSP_GATEWAY_URL="https://merchant-qa.hashkeymerchant.com"
 HSP_APP_KEY="ak_agentbazaar_demo"
 HSP_APP_SECRET="sec_agentbazaar_hsk_hackathon_2026"
@@ -146,52 +125,93 @@ HSP_MERCHANT_NAME="AgentBazaar Protocol"
 HSP_SANDBOX_MODE="true"
 ```
 
----
-
-## 7. Automated Testing Suite
-
-### Protocol & Architecture Tests
+### 3. Initialize Database & Seed Agents
 ```bash
-node --test test/protocol.test.mjs
+npx prisma db push
+npx tsx prisma/seed.ts
 ```
-Validates:
-- RFC 8785 Canonical JSON sorting and key order invariance
-- HSP HMAC-SHA256 request signing
-- Deterministic natural language task interpretation & budget extraction
-- Deterministic multi-agent security checks
-- Address formatting and anti-SSRF safeguards
 
-### Smart Contract Tests
+### 4. Run Automated Test Suites
 ```bash
+# Protocol & architecture tests (RFC 8785 Canonical JSON, HSP HMAC, AI parsers)
+node --test test/protocol.test.mjs
+
+# Hardhat smart contract tests (Escrow, Reentrancy, Checks-Effects-Interactions)
 npx hardhat test
 ```
-Validates:
-- Native HSK escrow locking
-- Duplicate settlement prevention
-- Buyer-authorized payout release
-- Unauthorized third-party rejection
-- Timeout-bounded refunds
+
+### 5. Launch the Application
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view AgentBazaar.
 
 ---
 
-## 8. Mainnet Deployment Checklist & Safety Notice
+## ☁️ Vercel Deployment Guide
 
-> [!WARNING]
-> **SAFETY NOTICE**: In compliance with hackathon instructions, do not execute irreversible mainnet transactions, deploy contracts, or publish private keys without explicit authorization.
+To deploy AgentBazaar to Vercel:
 
-When authorized for HashKey Chain Mainnet deployment:
-1. Ensure `DEPLOYER_PRIVATE_KEY` has sufficient native HSK balance on Chain ID `177`.
-2. Review contract code in `contracts/AgentBazaarEscrow.sol`.
-3. Run the deployment script:
-   ```bash
-   npx hardhat run scripts/deploy.js --network hskMainnet
+1. Import your repository: `https://github.com/codewithpradeep14/AgentBazaar`.
+2. **Framework Preset**: Select **Next.js**.
+3. **Build & Output Settings**:
+   - Turn **ON** the **Build Command** override.
+   - Enter: `npx prisma generate && next build`
+4. **Environment Variables**:
+   Click **"Import .env"** or paste the following values:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-1.5-flash
+   DATABASE_URL=file:./dev.db
+   NEXT_PUBLIC_HSK_CHAIN_ID=177
+   NEXT_PUBLIC_HSK_CHAIN_NAME=HashKey Chain Mainnet
+   NEXT_PUBLIC_HSK_RPC_URL=https://mainnet.hsk.xyz
+   NEXT_PUBLIC_HSK_EXPLORER_URL=https://hashkey.blockscout.com
+   NEXT_PUBLIC_HSK_CURRENCY_SYMBOL=HSK
+   NEXT_PUBLIC_HSK_DECIMALS=18
+   NEXT_PUBLIC_WHSK_ADDRESS=0xB210D2120d57b758EE163cFfb43e73728c471Cf1
+   NEXT_PUBLIC_USDC_ADDRESS=0x054ed45810DbBAb8B27668922D110669c9D88D0a
+   NEXT_PUBLIC_USDT_ADDRESS=0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029
+   NEXT_PUBLIC_AGENT_BAZAAR_CONTRACT_ADDRESS=0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+   HSP_GATEWAY_URL=https://merchant-qa.hashkeymerchant.com
+   HSP_APP_KEY=ak_agentbazaar_demo
+   HSP_APP_SECRET=sec_agentbazaar_hsk_hackathon_2026
+   HSP_MERCHANT_NAME=AgentBazaar Protocol
+   HSP_SANDBOX_MODE=true
    ```
-4. Verify the deployment artifact generated in `deployments/hskMainnet.json`.
-5. View and verify on HashKey Blockscout: `https://hashkey.blockscout.com/address/<deployed-address>`.
+5. Click **Deploy**.
 
 ---
 
-## 9. Hackathon Track & Submission Summary
-- **Hackathon**: HSK Chain Horizon Hackathon Mumbai Edition
+## 🤖 Multi-Agent Coordination Pipeline
+
+When a task enters the execution phase, AgentBazaar orchestrates a specialist multi-agent team:
+
+1. **Synthex (Coder Agent)**:
+   - Scaffolds complete Solidity smart contract implementations following ERC standards.
+   - Applies strict compiler pragmas (`^0.8.20`) and access control modifiers.
+2. **Axiom (Testing Agent)**:
+   - Performs deterministic invariant analysis.
+   - Evaluates state transition safety, checks-effects-interactions, and gas bounds.
+3. **Cerberus (Auditor Agent)**:
+   - Compiles a standardized Security Vulnerability Matrix (Critical, High, Medium, Low, Informational).
+   - Generates executive remediation guidance and formal acceptance criteria validation.
+
+---
+
+## 📜 Smart Contract Safety & Escrow
+
+[`AgentBazaarEscrow.sol`](./contracts/AgentBazaarEscrow.sol) provides non-custodial protection:
+- **Direct Native HSK Locking**: Escrow holds task funds safely on HashKey Chain.
+- **Strict Authorization Guard**: Payout release requires explicit buyer signature authorization.
+- **Reentrancy Protection**: OpenZeppelin-standard `ReentrancyGuard` on all state-modifying functions.
+- **Timelocked Safety Refunds**: Buyers can retrieve deposits if agents fail to deliver within agreed deadlines.
+
+---
+
+## 🏆 Hackathon Submission Details
+
+- **Event**: HSK Chain Horizon Hackathon Mumbai Edition
 - **Track**: Agent Payments & A2A Settlement
-- **Official Resources**: [HashFans Developer Hub](https://hashfans.io) | [HSP Documentation](https://hashkey-merchant.github.io/#/) | [HSK Telegram Group](https://t.me/+LBRNQQKVmo83OTg1)
+- **Repository**: [https://github.com/codewithpradeep14/AgentBazaar](https://github.com/codewithpradeep14/AgentBazaar)
+- **Official Documentation**: [HashKey Settlement Protocol (HSP)](https://hashkey-merchant.github.io/#/)
